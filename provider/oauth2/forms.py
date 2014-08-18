@@ -65,7 +65,7 @@ class ScopeChoiceField(forms.ChoiceField):
             value = value.split(' ')
 
         # Split values into list
-        return u' '.join([smart_text(val) for val in value]).split(u' ')
+        return ' '.join([smart_text(val) for val in value]).split(' ')
 
     def validate(self, value):
         """
@@ -151,7 +151,7 @@ class AuthorizationRequestForm(ScopeMixin, OAuthForm):
             if type not in RESPONSE_TYPE_CHOICES:
                 raise OAuthValidationError({
                     'error': 'unsupported_response_type',
-                    'error_description': u"'%s' is not a supported response "
+                    'error_description': "'%s' is not a supported response "
                         "type." % type})
 
         return response_type

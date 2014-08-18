@@ -108,7 +108,7 @@ class AuthorizationTest(BaseOAuth2TestCase):
         response = self.client.get(self.auth_url2())
 
         self.assertEqual(400, response.status_code)
-        self.assertTrue(escape(u"No 'response_type' supplied.") in response.content)
+        self.assertTrue(escape("No 'response_type' supplied.") in response.content)
 
     def test_authorization_requires_supported_response_type(self):
         self.login()
@@ -116,7 +116,7 @@ class AuthorizationTest(BaseOAuth2TestCase):
         response = self.client.get(self.auth_url2())
 
         self.assertEqual(400, response.status_code)
-        self.assertTrue(escape(u"'unsupported' is not a supported response type.") in response.content)
+        self.assertTrue(escape("'unsupported' is not a supported response type.") in response.content)
 
         response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code' % self.get_client().client_id)
         response = self.client.get(self.auth_url2())
@@ -135,7 +135,7 @@ class AuthorizationTest(BaseOAuth2TestCase):
         response = self.client.get(self.auth_url2())
 
         self.assertEqual(400, response.status_code)
-        self.assertTrue(escape(u"The requested redirect didn't match the client settings.") in response.content)
+        self.assertTrue(escape("The requested redirect didn't match the client settings.") in response.content)
 
         response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&redirect_uri=%s' % (
             self.get_client().client_id,
@@ -151,7 +151,7 @@ class AuthorizationTest(BaseOAuth2TestCase):
         response = self.client.get(self.auth_url2())
 
         self.assertEqual(400, response.status_code)
-        self.assertTrue(escape(u"'invalid' is not a valid scope.") in response.content)
+        self.assertTrue(escape("'invalid' is not a valid scope.") in response.content)
 
         response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&scope=%s' % (
             self.get_client().client_id,
