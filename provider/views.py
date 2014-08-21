@@ -292,7 +292,7 @@ class Redirect(OAuthView, Mixin):
     an error.
     """
 
-    def error_response(self, error, , status=400,
+    def error_response(self, error, mimetype='deprecated', status=400,
             **kwargs):
         """
         Return an error response to the client with default status code of
