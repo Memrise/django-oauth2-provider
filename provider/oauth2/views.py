@@ -93,11 +93,10 @@ class AccessTokenView(AccessTokenView):
         return form.cleaned_data
 
     def get_access_token(self, request, user, scope, client):
-        try:
-            # Attempt to fetch an existing access token.
-            at = AccessToken.objects.get(user=user, client=client,
-                                         scope=scope, expires__gt=now())
-        except AccessToken.DoesNotExist:
+        # Attempt to fetch an existing access token.
+        at = AccessToken.objects.filter(user=user, client=client,
+                                        scope=scope, expires__gt=now()).first()
+        if at is None:
             # None found... make a new one!
             at = self.create_access_token(request, user, scope, client)
             self.create_refresh_token(request, user, scope, at, client)
