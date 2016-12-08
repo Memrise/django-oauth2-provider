@@ -255,7 +255,7 @@ class Authorize(OAuthView, Mixin):
 
         try:
             client, data = self._validate_client(request, data)
-        except OAuthError, e:
+        except OAuthError as e:
             return self.error_response(request, e.args[0], status=400)
 
         authorization_form = self.get_authorization_form(request, client,
@@ -597,5 +597,5 @@ class AccessToken(OAuthView, Mixin):
 
         try:
             return handler(request, data, client)
-        except OAuthError, e:
+        except OAuthError as e:
             return self.error_response(e.args[0])
