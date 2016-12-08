@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect, QueryDict
 from django.utils.translation import ugettext as _
 from django.views.generic.base import TemplateView
 from django.core.exceptions import ObjectDoesNotExist
-from oauth2.models import Client
+from .oauth2.models import Client
 from . import constants, scope
 
 
