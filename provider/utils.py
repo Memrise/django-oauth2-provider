@@ -31,7 +31,7 @@ def short_token():
     """
     Generate a hash that can be used as an application identifier
     """
-    hash = hashlib.sha1(shortuuid.uuid())
+    hash = hashlib.sha1(shortuuid.uuid().encode('utf-8'))
     hash.update(settings.SECRET_KEY)
     return hash.hexdigest()[::2]
 
