@@ -1,3 +1,5 @@
+from base64 import standard_b64decode
+
 from ..utils import now
 from .forms import ClientAuthForm, PublicPasswordGrantForm
 from .models import AccessToken
@@ -28,8 +30,16 @@ class BasicClientBackend(object):
             return None
 
         try:
-            basic, base64 = auth.split(' ')
-            client_id, client_secret = base64.decode('base64').split(':')
+            basic, base64_str = auth.split(' ')
+            base64_bytes = standard_b64decode(base64_str)
+            try:
+                base64_str = base64_bytes.decode('utf-8')
+            except UnicodeDecodeError:
+                # the token was not a correctly-formed base64-string,
+                # which means that this backend shall not proceed further.
+                return None
+
+            client_id, client_secret = base64_str.split(':')
 
             form = ClientAuthForm({
                 'client_id': client_id,
