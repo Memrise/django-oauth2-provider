@@ -6,7 +6,7 @@ views in :attr:`provider.views`.
 
 from django.db import models
 from django.conf import settings
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from .. import constants
 from ..constants import CLIENT_TYPES
 from ..utils import now, short_token, long_token, get_code_expiry
@@ -159,7 +159,7 @@ class AccessToken(models.Model):
         # which leads to subtle issues when a particular piece of code relies upon the fact that
         # 'abc' is logically the same as a human-readable bytes sequence b'abc'.
         # Starting from 2.0, CharField will treat the latter as "b'abc'" on every get/filter operations.
-        self.token = force_text(self.token)
+        self.token = force_str(self.token)
         super(AccessToken, self).save(*args, **kwargs)
 
     def get_expire_delta(self, reference=None):
