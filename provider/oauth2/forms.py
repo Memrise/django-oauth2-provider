@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.utils.encoding import smart_text
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from .. import scope
 from ..constants import RESPONSE_TYPE_CHOICES, SCOPES
 from ..forms import OAuthForm, OAuthValidationError
@@ -65,7 +65,7 @@ class ScopeChoiceField(forms.ChoiceField):
             value = value.split(' ')
 
         # Split values into list
-        return ' '.join([smart_text(val) for val in value]).split(' ')
+        return u' '.join([smart_text(val) for val in value]).split(u' ')
 
     def validate(self, value):
         """

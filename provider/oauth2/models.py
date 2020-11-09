@@ -6,6 +6,7 @@ views in :attr:`provider.views`.
 
 from django.db import models
 from django.conf import settings
+from django.utils.encoding import force_str
 from .. import constants
 from ..constants import CLIENT_TYPES
 from ..utils import now, short_token, long_token, get_code_expiry
@@ -37,7 +38,7 @@ class Client(models.Model):
     Clients are outlined in the :rfc:`2` and its subsections.
     """
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='oauth2_client',
-        blank=True, null=True)
+        blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=True)
     url = models.URLField(help_text="Your application's URL.")
     redirect_uri = models.URLField(help_text="Your application's callback URL")
@@ -81,6 +82,10 @@ class Client(models.Model):
 
         return cls(**kwargs)
 
+    class Meta:
+        app_label = 'oauth2'
+        db_table = 'oauth2_client'
+
 
 class Grant(models.Model):
     """
@@ -98,8 +103,8 @@ class Grant(models.Model):
     * :attr:`redirect_uri`
     * :attr:`scope`
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
-    client = models.ForeignKey(Client)
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
     code = models.CharField(max_length=255, default=long_token)
     expires = models.DateTimeField(default=get_code_expiry)
     redirect_uri = models.CharField(max_length=255, blank=True)
@@ -107,6 +112,10 @@ class Grant(models.Model):
 
     def __unicode__(self):
         return self.code
+
+    class Meta:
+        app_label = 'oauth2'
+        db_table = 'oauth2_grant'
 
 
 class AccessToken(models.Model):
@@ -129,9 +138,9 @@ class AccessToken(models.Model):
     * :meth:`get_expire_delta` - returns an integer representing seconds to
         expiry
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     token = models.CharField(max_length=255, default=long_token, db_index=True)
-    client = models.ForeignKey(Client)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
     expires = models.DateTimeField()
     scope = models.IntegerField(default=constants.SCOPES[0][0],
             choices=constants.SCOPES)
@@ -144,6 +153,13 @@ class AccessToken(models.Model):
     def save(self, *args, **kwargs):
         if not self.expires:
             self.expires = self.client.get_default_token_expiry()
+        # Since Django 2.0, model CharFields do not auto-convert between bytes and strings:
+        # https://github.com/django/django/blob/1.11.6/django/db/models/fields/__init__.py#L1095
+        # https://github.com/django/django/blob/2.0/django/db/models/fields/__init__.py#L1082
+        # which leads to subtle issues when a particular piece of code relies upon the fact that
+        # 'abc' is logically the same as a human-readable bytes sequence b'abc'.
+        # Starting from 2.0, CharField will treat the latter as "b'abc'" on every get/filter operations.
+        self.token = force_str(self.token)
         super(AccessToken, self).save(*args, **kwargs)
 
     def get_expire_delta(self, reference=None):
@@ -165,6 +181,10 @@ class AccessToken(models.Model):
         timedelta = expiration - reference
         return timedelta.days*86400 + timedelta.seconds
 
+    class Meta:
+        app_label = 'oauth2'
+        db_table = 'oauth2_accesstoken'
+
 
 class RefreshToken(models.Model):
     """
@@ -179,12 +199,15 @@ class RefreshToken(models.Model):
     * :attr:`client` - :class:`Client`
     * :attr:`expired` - ``boolean``
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     token = models.CharField(max_length=255, default=long_token)
-    access_token = models.OneToOneField(AccessToken,
-            related_name='refresh_token')
-    client = models.ForeignKey(Client)
+    access_token = models.OneToOneField(AccessToken, related_name='refresh_token', on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
     expired = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.token
+
+    class Meta:
+        app_label = 'oauth2'
+        db_table = 'oauth2_refreshtoken'
