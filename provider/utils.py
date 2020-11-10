@@ -4,8 +4,8 @@ from datetime import datetime, tzinfo
 from django.conf import settings
 from django.utils import dateparse
 from django.db.models.fields import (DateTimeField, DateField,
-                                     EmailField, TimeField,
-                                     FieldDoesNotExist)
+                                     EmailField, TimeField)
+from django.core.exceptions import FieldDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from .constants import EXPIRE_DELTA, EXPIRE_DELTA_PUBLIC, EXPIRE_CODE_DELTA
 

@@ -1,11 +1,15 @@
 import json
-import urlparse
+try:
+    import urlparse
+except ImportError:  # python3
+    import urllib.parse as urlparse
+
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect, QueryDict
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.views.generic.base import TemplateView
 from django.core.exceptions import ObjectDoesNotExist
-from oauth2.models import Client
+from .oauth2.models import Client
 from . import constants, scope
 
 
@@ -255,7 +259,7 @@ class Authorize(OAuthView, Mixin):
 
         try:
             client, data = self._validate_client(request, data)
-        except OAuthError, e:
+        except OAuthError as e:
             return self.error_response(request, e.args[0], status=400)
 
         authorization_form = self.get_authorization_form(request, client,
@@ -298,7 +302,8 @@ class Redirect(OAuthView, Mixin):
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
         """
-        return HttpResponse(json.dumps(error), status=status, **kwargs)
+        return HttpResponse(json.dumps(error), content_type=mimetype,
+                status=status, **kwargs)
 
     def get(self, request):
         data = self.get_data(request)
@@ -462,7 +467,8 @@ class AccessToken(OAuthView, Mixin):
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
         """
-        return HttpResponse(json.dumps(error), status=status, **kwargs)
+        return HttpResponse(json.dumps(error), content_type=mimetype,
+                status=status, **kwargs)
 
     def access_token_response(self, access_token):
         """
@@ -485,7 +491,9 @@ class AccessToken(OAuthView, Mixin):
         except ObjectDoesNotExist:
             pass
 
-        return HttpResponse(json.dumps(response_data))
+        return HttpResponse(
+            json.dumps(response_data), content_type='application/json'
+        )
 
     def authorization_code(self, request, data, client):
         """
@@ -567,18 +575,19 @@ class AccessToken(OAuthView, Mixin):
         """
         As per :rfc:`3.2` the token endpoint *only* supports POST requests.
         """
+        data = request.POST or request.data
         if constants.ENFORCE_SECURE and not request.is_secure():
             return self.error_response({
                 'error': 'invalid_request',
                 'error_description': _("A secure connection is required.")})
 
-        if not 'grant_type' in request.POST:
+        if 'grant_type' not in data:
             return self.error_response({
                 'error': 'invalid_request',
                 'error_description': _("No 'grant_type' included in the "
                     "request.")})
 
-        grant_type = request.POST['grant_type']
+        grant_type = data['grant_type']
 
         if grant_type not in self.grant_types:
             return self.error_response({'error': 'unsupported_grant_type'})
@@ -591,6 +600,6 @@ class AccessToken(OAuthView, Mixin):
         handler = self.get_handler(grant_type)
 
         try:
-            return handler(request, request.POST, client)
-        except OAuthError, e:
+            return handler(request, data, client)
+        except OAuthError as e:
             return self.error_response(e.args[0])

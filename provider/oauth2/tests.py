@@ -1,8 +1,12 @@
 import json
+try:
+    import urlparse
+except ImportError:  # python3
+    import urllib.parse as urlparse
 import datetime
 from django.http import QueryDict
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils.html import escape
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -15,10 +19,6 @@ from .models import Client, Grant, AccessToken, RefreshToken
 from .backends import BasicClientBackend, RequestParamsClientBackend
 from .backends import AccessTokenBackend
 
-try:
-    import urlparse
-except Exception:
-    from urllib import parse as urlparse
 
 @skipIfCustomUser
 class BaseOAuth2TestCase(TestCase):
